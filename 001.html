@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>作文要排队</title>
+<style>
+  body {
+    font-family: 'KaiTi', 'STKaiti', 'KaiTi_GB2312', '楷体', serif;
+  }
+
+  :root {
+    --main-gradient: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+    --btn-gradient: linear-gradient(90deg, #667eea, #764ba2);
+    --btn-secondary: linear-gradient(90deg, #43cea2, #185a9d);
+    --btn-warning: linear-gradient(90deg, #f7971e, #ffd200);
+  }
+  body {
+    font-family: 'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+    margin: 0;
+    background: linear-gradient(135deg, #f5f7fa 0%, #e4ebf5 100%);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  h1 {
+    width: 100%;
+    margin: 0;
+    padding: 18px 0;
+    background: var(--main-gradient);
+    color: #fff;
+    font-size: 26px;
+    font-weight: 600;
+    text-align: center;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+  }
+  .fade-in {
+    animation: fadeIn 0.6s ease;
+  }
+  @keyframes fadeIn {
+    from {opacity:0; transform: translateY(15px);}
+    to {opacity:1; transform: translateY(0);}
+  }
+  .section {
+    width: 100%;
+    max-width: 950px;
+    margin-top: 20px;
+    padding: 12px;
+    box-sizing: border-box;
+  }
+  button {
+    background: var(--btn-gradient);
+    border: none;
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-size: 15px;
+    font-weight: 500;
+    color: #fff;
+    cursor: pointer;
+    margin: 6px;
+    min-width: 120px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    transition: transform 0.2s, box-shadow 0.3s;
+  }
+  button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 18px rgba(0,0,0,0.15);
+  }
+  button:active {
+    transform: translateY(0);
+  }
+  .button-secondary {background: var(--btn-secondary);}
+  .button-warning {background: var(--btn-warning); color:#333;}
+  #main-image {
+    margin: 20px 0;
+    width: 200px;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 20px;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.2);
+    transition: transform 0.5s ease;
+    display: none; /* 初始隐藏 */
+  }
+  #question-selector h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #444;
+    margin: 10px 0 15px;
+    text-align: center;
+  }
+  #question-selector .button-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  #controls .controls-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 15px;
+  }
+  #scoreboard, #question-indicator, #timer {
+    background: #ffffff;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  }
+  #game-area {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 14px;
+    width: 100%;
+    max-width: 860px;
+    margin: 10px auto 20px;
+    padding: 12px;
+    box-sizing: border-box;
+  }
+  .sentence {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 14px;
+    font-size: 15px;
+    cursor: pointer;
+    user-select: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transition: transform 0.25s ease, background 0.3s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    animation: fadeIn 0.4s ease;
+  }
+  .sentence:hover {
+    transform: scale(1.02);
+    background: #f8faff;
+  }
+  .sentence.selected {
+    background: #74c69d;
+    color: #fff;
+    pointer-events: none;
+  }
+  .sentence.wrong {
+    animation: shake 0.4s;
+    background: #f28482 !important;
+    color: #fff;
+  }
+  .speak-icon {
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    cursor: pointer;
+    font-size: 18px;
+    user-select: none;
+  }
+  #result {
+    margin-bottom: 20px;
+    font-size: 18px;
+    font-weight: bold;
+    color: #ff5722;
+    min-height: 24px;
+  }
+  #timer {color: #e53935;}
+  @keyframes shake {
+    0% { transform: translateX(0);}
+    20% { transform: translateX(-5px);}
+    40% { transform: translateX(5px);}
+    60% { transform: translateX(-5px);}
+    80% { transform: translateX(5px);}
+    100% { transform: translateX(0);}
+  }
+</style>
+</head>
+<body>
+<h1>作文要排队</h1>
+
+<div id="question-selector" class="section fade-in">
+  <h3>选择一个题目开始：</h3>
+  <div class="button-container">
+    <button onclick="selectQuestion(0)">生日会</button>
+    <button onclick="selectQuestion(1)">运动会</button>
+    <button onclick="selectQuestion(2)">我的母亲</button>
+    <button onclick="selectQuestion(3)">我想发明</button>
+    <button onclick="selectQuestion(4)">游动物园</button>
+    <button onclick="selectQuestion(5)">开学的第一天</button>
+    <button onclick="selectQuestion(6)">日记一则</button>
+    <button onclick="selectQuestion(7)">小狗的自述</button>
+    <button onclick="selectQuestion(8)">一场误会</button>
+    <button onclick="selectQuestion(9)">海边游记</button>
+    <button onclick="selectQuestion(10)">去菜市场</button>
+    <button onclick="selectQuestion(11)">我的好朋友</button>
+    <button onclick="selectQuestion(12)">下雨天</button>
+    <button onclick="selectQuestion(13)">参加歌唱比赛</button>
+    <button onclick="selectQuestion(14)">第一次</button>
+  </div>
+  <div class="button-container">
+    <button class="button-warning" onclick="selectRandom()">随机一题</button>
+    <button class="button-secondary" onclick="toggleFullScreen()">全屏</button>
+  </div>
+</div>
+
+<div id="controls" class="section fade-in">
+  <div class="controls-buttons">
+    <button onclick="startGame()">开始游戏</button>
+    <button onclick="nextQuestion()">下一题</button>
+    <button class="button-secondary" onclick="backToSelection()">重新选择题目</button>
+    <button class="button-secondary" onclick="toggleFullScreen()">全屏</button>
+  </div>
+  <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:12px;">
+    <div id="scoreboard">得分：<span id="score">0</span></div>
+    <div id="question-indicator">题目 <span id="question-number">1</span>/<span id="question-total">1</span></div>
+    <div id="timer">用时：<span id="timer">0</span> 秒</div>
+  </div>
+  <div style="width:100%; max-width:600px; height:8px; background:#ddd; border-radius:4px; margin:14px auto; overflow:hidden;">
+    <div id="time-progress" style="height:100%; width:0%; background:linear-gradient(90deg,#6a11cb,#2575fc);"></div>
+  </div>
+</div>
+
+<img id="main-image" src="https://th.bing.com/th/id/R.50e5a11b866f739cf5904f1fc0f80535?rik=o8mumcl4LvHtwQ&riu=http%3a%2f%2fpurepng.com%2fpublic%2fuploads%2flarge%2fpurepng.com-pokeballpokeballdevicepokemon-ballpokemon-capture-ball-17015278258617bdog.png&ehk=a3mBf1C3uxf0QyBVX4dlwEfOeMbi1aVLsnascatqQ%2f4%3d&risl=&pid=ImgRaw&r=0" alt="main">
+<div id="game-area"></div>
+<div id="result"></div>
+
+<script>
+const mainImages = [
+  "https://img.pokemondb.net/sprites/sun-moon/normal/snorlax.png",
+  "https://img.pokemondb.net/sprites/x-y/normal/dugtrio.png",
+  "https://img.pokemondb.net/sprites/scarlet-violet/normal/tyranitar.png",
+  "https://img.pokemondb.net/sprites/scarlet-violet/normal/venusaur.png",
+  "https://tse2.mm.bing.net/th/id/OIP.oAuAWv5dBE8xdJKm-vOKFgHaHa?r=0&rs=1&pid=ImgDetMain&o=7&rm=3",
+  "https://img.pokemondb.net/sprites/scarlet-violet/normal/blastoise.png",
+  "https://img.pokemondb.net/sprites/scarlet-violet/normal/charizard.png",
+  "https://img.pokemondb.net/sprites/scarlet-violet/normal/gengar.png",
+  "https://img.pokemondb.net/sprites/x-y/normal/onix.png",
+  "https://img.pokemondb.net/sprites/scarlet-violet/normal/gyarados.png",
+  "https://img.pokemondb.net/sprites/scarlet-violet/normal/rhydon.png",
+  "https://img.pokemondb.net/sprites/brilliant-diamond-shining-pearl/normal/beedrill.png",
+  "https://img.pokemondb.net/sprites/brilliant-diamond-shining-pearl/normal/pidgeot.png",
+  "https://img.freepik.com/premium-vector/cute-cartoon-capybara-vector-illustration-isolated-white-background_186686-499.jpg?w=1380",
+  "https://img.pokemondb.net/sprites/scarlet-violet/normal/gyarados.png"
+];
+
+const questionPool =
+[
+  [
+    "今天是5月3日，是我的生日。",
+    "早上，我帮妈妈布置客厅。",
+    "我们挂上彩带，吹气球，还摆好蛋糕和饮料。",
+    "妈妈准备了炸鸡、披萨和果汁。",
+    "晚上，同学们陆续来到我家，他们带来了礼物，还有生日卡片。",
+    "我们一起玩游戏，一起讲笑话，屋子充满了欢笑声。",
+    "大家吃得津津有味。",
+    "我吹灭蜡烛，和大家一起分享生日蛋糕。",
+    "今天是我最开心的一天。"
+  ],
+  [
+    "一年一度的运动会又开始了。",
+    "早上，同学们都纷纷来到学校操场，操场上人山人海，好热闹。",
+    "运动会上有许多不同的运动项目，如跳高、赛跑、拔河。",
+    "今年，我代表我们班级参加100米赛跑。",
+    "哨声一响，我就像箭一样冲出去，成功为班级斩获了冠军奖牌。",
+    "接着，是最刺激的拔河比赛，黄队和青队都全力以赴地拉着绳子。",
+    "最后，是我们的班级获得了本届运动会的第一名。",
+    "傍晚，同学们都离开操场回家了。",
+    "这真是一场难忘的运动会。"
+  ],
+  [
+    "这是我的母亲。",
+    "她有一双大大的眼睛，长长的头发，皮肤白皙，是一位温柔体贴的妈妈。",
+    "每天早上，厨房里总会传来阵阵香味，那是母亲为我准备的美味早餐。",
+    "吃完后，她还会载我到学校上课。",
+    "晚上，母亲也会耐心地陪我做功课。",
+    "有一次我生病了，母亲坐在我的床边，无微不至地照顾我，直到我康复。",
+    "她就像一位魔法师，总能把简单的食材变成一道道美味的菜肴。",
+    "我很感谢我的母亲，她一直默默地为我付出。",
+    "我一定要努力学习，将来好好报答她的爱与照顾。"
+  ],
+  [
+    "你想发明什么呢？我想发明一台机器人，名字叫“小帮手”。",
+    "小帮手有圆圆的头、一双大大的眼睛，身体是白色的。",
+    "最特别的是它有许多机械手臂，能同时做很多事情。",
+    "放学后，它会到我的书房教我做功课，任何难题都可以请教它。",
+    "晚饭后，它还能到厨房帮妈妈洗碗、打扫，分担家务。",
+    "空闲的时候，小帮手也会陪我一起玩我最喜欢的西洋棋，是我最好的朋友。",
+    "我想发明小帮手，是因为爸爸妈妈每天都很忙。",
+    "我希望有了小帮手，他们能轻松一点，过得更开心、更幸福，做起事来也能事半功倍。",
+    "最后，我一定会好好学习，长大后真的发明出小帮手，帮助全世界的人！"
+  ],
+  [
+    "假期时，我正在书房做功课，爸爸突然走进来，提议带我们一家人到动物园游玩。",
+    "经过一个小时的车程，我们终于抵达了目的地。",
+    "动物园门口人山人海，十分热闹。",
+    "一进到动物园，我就看见几只顽皮的猴子在树上跳来跳去，有的在吃香蕉，样子十分滑稽。",
+    "接着，我们来到了熊猫馆。我还亲手喂了圆鼓鼓的大熊猫吃竹子，它实在太可爱了！",
+    "然后，我也看到了凶猛的万兽之王——老虎。它却正在呼呼大睡，像一只胖胖的大猫。",
+    "在动物园里，我从资讯栏上学到了许多关于动物的知识，真是大开眼界。",
+    "我还拉着爸爸东奔西跑，到处和动物们合照，留下了许多美好的回忆。",
+    "傍晚，我们要回家了。我好依依不舍，下次我一定还要再来参观动物园！"
+  ],
+  [
+    "铃……闹钟响了！今天是开学的第一天，我一大早就起床了。",
+    "我穿上整齐的校服，背上新书包，我的心情既兴奋又紧张。",
+    "爸爸妈妈把我送到学校门口。",
+    "校门口人山人海，到处都是来报到的学生和家长，十分热闹。",
+    "我还遇见了久违的好朋友，我们一边走一边聊着假期发生的趣事。",
+    "上课了，老师在教室里介绍了几位新同学，要我们好好相处。",
+    "接着，老师发下新学期的课本。课本非常漂亮，还散发着淡淡的墨香，我一定会好好珍惜。",
+    "放学了，我和同学挥手道别，同学们也陆续回家了。",
+    "坐上车后，我在心里默默下定决心：新学期我要更加努力，争取更好的成绩！"
+  ],
+  [
+    "上个星期五，我坐在沙发上，舒服地玩着手机。",
+    "突然，“唦！”的一声，我的四周一下子暗了下来，原来是停电了。",
+    "妈妈拿着蜡烛从厨房走出来。",
+    "她陪我一起用蜡烛玩起了手影游戏。",
+    "我们用手做出各种动物的影子，有小狗、老鹰、狼等等，还比赛谁做得像。",
+    "我们笑个不停，玩得十分开心。",
+    "不久，电力恢复了，屋子里又变得明亮。",
+    "我和妈妈都很高兴。",
+    "这个停电的夜晚，虽然没有电视和灯光，但我们一家人还是度过了一个温暖又快乐的时光。"
+  ],
+  [
+    "我是一只可爱的小狗。",
+    "我的名字叫“毛毛”。",
+    "我有一身棕色的毛发，一双圆圆的眼睛，还有灵敏的鼻子。",
+    "我住在一个温暖的家。",
+    "早上，主人会带我去公园散步。",
+    "下午，他还会为我准备香喷喷的食物。",
+    "傍晚，我们则会一起在院子里玩丢球游戏。",
+    "最后，我希望我能一直陪伴我的主人，无论是快乐的时候，还是难过的时候。"
+  ],
+  [
+    "今天下课时，我在课室里写着我的功课。教室里剩下我独自一人。",
+    "突然，同学小月找不到她的铅笔。她很着急，到处问人。",
+    "她看见我使用和她一样的铅笔，便指责我偷了她的铅笔。",
+    "我吓了一跳，连忙解释说我没有。",
+    "但她不相信我，转身就走了。",
+    "我觉得很委屈，也有一点伤心。",
+    "不久，小月在地板上找到了那支铅笔。",
+    "她走来向我道歉，跟我说是她误会了我。",
+    "我笑了笑，告诉她说我没有生气。虽然这是一场误会，但我们还是好朋友。"
+  ],
+  [
+    "上个星期天一早，妈妈叫我起床，说要带我们去海边玩。",
+    "我兴奋极了，立刻起床换衣服，还准备了帽子、水壶和小背包。",
+    "我们一家人坐车出发，一路上有说有笑。",
+    "到了海边，我看到蓝蓝的大海一望无际，海浪一阵阵地拍打着岸边。",
+    "我和爸爸一起堆沙堡，堆出了一座小城堡。",
+    "妈妈在一旁帮我们拍照，还和我一起捡贝壳。",
+    "海风轻轻吹来，带着咸咸的味道，我觉得好舒服。",
+    "太阳慢慢下山了，天边变成了橙色。",
+    "我依依不舍地离开海边。这次旅行让我感到很快乐，我希望下次还能再来。"
+  ],
+  [
+    "今天早上，妈妈带我到菜市场买菜。",
+    "一走进菜市场，就听见人们在讨价还价的声音，还闻到新鲜蔬菜和水果的香味。",
+    "我们先来到卖青菜的摊位，老板把青菜分门别类地摆放整齐。",
+    "妈妈在摊位买了几个新鲜的番茄。",
+    "接着，我们来到水果摊上，看到五颜六色的水果，如苹果、香蕉和葡萄。",
+    "然后，我们还去了卖鱼的摊位，闻到一阵阵的鱼腥味，还看到几条特别大的鱼。",
+    "卖完菜后，我们满载而归地回家。",
+    "虽然菜市场有点吵，但我学会了很多新东西。",
+    "下次我还想再去！"
+  ],
+  [
+    "每个人都有自己的好朋友，我的朋友名字叫小薇。",
+    "她有一头乌黑的头发、白皙的皮肤和一双炯炯有神的眼睛，长得十分漂亮。",
+    "小薇的成绩非常好，也很擅长打羽毛球。",
+    "下课时，她会陪我一起去图书馆，耐心地教我功课。",
+    "空闲的时候，我常常和她一起练习打羽毛球。",
+    "每次我忘记带文具，她都会借给我。",
+    "我们每天一起上课，还会一起吃点心。",
+    "我很喜欢和小薇做朋友。",
+    "她对我很好，我也会珍惜我们的友谊。"
+  ],
+  [
+    "早晨起床，我听见屋外“滴滴答答”的声音。",
+    "我来到窗口一看，天空下起了一场倾盆大雨。",
+    "我背着书包，拿起雨伞，走路去学校。",
+    "路边的树叶上挂着水珠，路上到处都是水洼，走路都要更小心一些。",
+    "街道上，行人撑着五颜六色的雨伞，有的还穿着雨衣。",
+    "走到小池塘边，我听见几只青蛙“呱呱”叫，好像在说：“今天真凉快！”",
+    "到了学校，雨水淋湿了我的书包，我的鞋子也变得湿哒哒的。",
+    "希望雨停后，可以看见美丽的彩虹。"
+  ],
+  [
+  "上个星期，学校举行了一场歌唱比赛。",
+  "老师挑选我代表班级上台唱歌，我又紧张又兴奋。",
+  "比赛前，我每天都对着镜子练习唱歌。",
+  "当天，我穿上整齐的校服，站在舞台上。",
+  "台下坐满了老师和同学，我的心跳得飞快。",
+  "音乐响起时，我深呼吸一口气。",
+  "我克服心中的害怕，鼓起勇气开口唱歌，把练习已久的歌曲唱出来。",
+  "唱完后，大家给我热烈的掌声，我欣喜若狂。",
+  "我得到了这场比赛的优秀奖，父母都为我的勇敢感到十分开心。以后我还想再参加！"
+  ],
+  [
+"今天，我迎来了人生的首次下厨。",
+"我心里满心期待，一早就准备好材料，跃跃欲试地想要做一盘炒蛋。",
+"开始动手的时候，我小心地打蛋、放盐、开火。虽然是第一次尝试，我还是很认真。",
+"油一热，我就把蛋倒进锅里，慢慢翻炒。",
+"锅里发出滋滋的声音，香味也飘了出来。",
+"忙了一阵子，我的头发乱了，衣服上沾着面粉，变得有点蓬头垢面，但我一点也不在意。",
+"这次下厨对我来说是一次新的挑战。",
+"虽然炒蛋不太好吃，但心里有一种特别的成就感。",
+"这是一次难忘的经历，我也从中有了收获，以后还想多多练习。"
+
+  ]
+];
+
+function speakSentence(sentence) {
+  const synth = window.speechSynthesis;
+  synth.cancel();
+  const utter = new SpeechSynthesisUtterance(sentence);
+  utter.lang = "zh-CN";
+  synth.speak(utter);
+}
+
+let currentQuestionIndex = 0;
+let correctOrder = questionPool[currentQuestionIndex];
+let shuffled = [];
+let currentIndex = 0;
+let score = 0;
+let timer = 0;
+let timerInterval;
+let mainScale = 1;
+
+window.onload = function() {
+  document.getElementById("controls").style.display = "none";
+  document.addEventListener("click", tryFullScreen, { once: true });
+  document.addEventListener("touchstart", tryFullScreen, { once: true });
+};
+
+function tryFullScreen() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch(()=>{});
+  }
+}
+
+function shuffleArray(array) {
+  const copy = [...array];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+function startGame() {
+  // 进入游戏时显示图片
+  document.getElementById("main-image").style.display = "block";
+
+  correctOrder = questionPool[currentQuestionIndex];
+  shuffled = shuffleArray(correctOrder);
+  currentIndex = 0;
+  mainScale = 1;
+  document.getElementById("main-image").src = mainImages[currentQuestionIndex];
+  document.getElementById("main-image").style.transform = "scale(1)";
+  timer = 0;
+  document.getElementById("timer").innerText = timer;
+  document.getElementById("time-progress").style.width = "0%";
+  document.getElementById("question-number").innerText = currentQuestionIndex + 1;
+  document.getElementById("question-total").innerText = questionPool.length;
+  document.getElementById("result").innerText = "";
+
+  const gameArea = document.getElementById("game-area");
+  gameArea.innerHTML = "";
+  shuffled.forEach((sentence) => {
+    const div = document.createElement("div");
+    div.className = "sentence";
+    const text = document.createElement("div");
+    text.innerText = sentence;
+    div.appendChild(text);
+    const icon = document.createElement("span");
+    icon.className = "speak-icon";
+    icon.innerText = "🔊";
+    icon.onclick = (e) => { e.stopPropagation(); speakSentence(sentence); };
+    div.appendChild(icon);
+    div.onclick = () => handleClick(div, sentence);
+    gameArea.appendChild(div);
+  });
+
+  clearInterval(timerInterval);
+  const maxTime = 120;
+  timerInterval = setInterval(() => {
+    timer++;
+    document.getElementById("timer").innerText = timer;
+    let progress = Math.min((timer / maxTime) * 100, 100);
+    document.getElementById("time-progress").style.width = progress + "%";
+  }, 1000);
+}
+
+function handleClick(div, sentence) {
+  if (sentence === correctOrder[currentIndex]) {
+    div.classList.add("selected");
+    mainScale = 1 + currentIndex * 0.1;
+    if (mainScale > 1.9) mainScale = 1.9;
+    document.getElementById("main-image").style.transform = `scale(${mainScale})`;
+    currentIndex++;
+    if (currentIndex === correctOrder.length) {
+      score++;
+      document.getElementById("score").innerText = score;
+      clearInterval(timerInterval);
+      document.getElementById("result").innerText = `恭喜你，全部正确！用时 ${timer} 秒`;
+    }
+  } else {
+    div.classList.add("wrong");
+    setTimeout(() => div.classList.remove("wrong"), 500);
+    document.querySelectorAll(".selected").forEach(el => el.classList.remove("selected"));
+    mainScale = 1;
+    document.getElementById("main-image").style.transform = "scale(1)";
+    currentIndex = 0;
+  }
+}
+
+function nextQuestion() {
+  currentQuestionIndex = (currentQuestionIndex + 1) % questionPool.length;
+  startGame();
+}
+
+function toggleFullScreen() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen();
+  } else {
+    document.exitFullscreen();
+  }
+}
+
+function selectQuestion(index) {
+  currentQuestionIndex = index;
+  document.getElementById("question-selector").style.display = "none";
+  document.getElementById("controls").style.display = "block";
+  startGame();
+}
+function selectRandom() {
+  const total = questionPool.length;
+  const randomIndex = Math.floor(Math.random() * total);
+  selectQuestion(randomIndex);
+}
+function backToSelection() {
+  document.getElementById("controls").style.display = "none";
+  document.getElementById("question-selector").style.display = "block";
+  document.getElementById("game-area").innerHTML = "";
+  document.getElementById("result").innerText = "";
+  document.getElementById("main-image").style.display = "none"; // 回到选择界面隐藏图片
+}
+</script>
+</body>
+</html>
